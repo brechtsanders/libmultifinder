@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="Workspace">
+		<Project filename="multifinder.cbp" />
+		<Project filename="multifinder_static.cbp" />
+		<Project filename="test1.cbp">
+			<Depends filename="multifinder.cbp" />
+		</Project>
+		<Project filename="test2.cbp">
+			<Depends filename="multifinder.cbp" />
+		</Project>
+		<Project filename="multifinder_count.cbp">
+			<Depends filename="multifinder.cbp" />
+		</Project>
+		<Project filename="multifinder_replace.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>
