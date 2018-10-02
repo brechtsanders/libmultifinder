@@ -151,6 +151,17 @@ DLL_EXPORT_MULTIFINDER void multifinder_add_allocated_pattern (multifinder handl
     handle->longestpattern = patternlen;
 }
 
+DLL_EXPORT_MULTIFINDER size_t multifinder_count_patterns (multifinder handle)
+{
+  size_t count = 0;
+  struct multifinder_pattern_list* p = handle->patterns;
+  while (p) {
+    count++;
+    p = p->next;
+  }
+  return count;
+}
+
 int compare_across_2_buffers (int (*strncmp_fn)(const char*, const char*, size_t), const char* s1, size_t s1len, const char* s2a, size_t s2alen, const char* s2b, size_t s2blen)
 {
   int result;

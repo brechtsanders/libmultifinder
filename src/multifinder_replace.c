@@ -51,7 +51,7 @@ int main (int argc, char** argv)
   //initialize
   if ((finder = multifinder_create(whenfound, flushsearchdata, &dst)) == NULL) {
     fprintf(stderr, "Error in multifinder_create()\n");
-    return 1;
+    return 2;
   }
   //process command line parameters
   {
@@ -159,7 +159,7 @@ int main (int argc, char** argv)
   if (dst == NULL) {
     fprintf(stderr, "Error opening output file: %s\n", srcfile);
     multifinder_free(finder);
-    return 4;
+    return 3;
   }
   if (srctext) {
     //process supplied text
@@ -176,7 +176,7 @@ int main (int argc, char** argv)
       if ((src = fopen(srcfile, "rb")) == NULL) {
         fprintf(stderr, "Error opening input file: %s\n", srcfile);
         multifinder_free(finder);
-        return 3;
+        return 4;
       }
     }
     while ((buflen = fread(buf, 1, READBUFFERSIZE, src)) > 0) {

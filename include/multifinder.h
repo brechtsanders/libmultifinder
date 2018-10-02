@@ -180,6 +180,16 @@ DLL_EXPORT_MULTIFINDER void multifinder_add_pattern (multifinder handle, const c
  */
 DLL_EXPORT_MULTIFINDER void multifinder_add_allocated_pattern (multifinder handle, char* pattern, size_t patternlen, unsigned int flags, void* patterncallbackdata);
 
+/*! \brief get the total number of patterns
+ * \param  handle                handle created with multifinder_create
+ * \return number of patterns
+ * \param  patterncallbackdata   user data to pass to callback function on each match
+ * \sa     multifinder_add_pattern
+ * \sa     multifinder_add_allocated_pattern
+ * \sa     multifinder_create
+ */
+DLL_EXPORT_MULTIFINDER size_t multifinder_count_patterns (multifinder handle);
+
 /*! \brief find patterns in data and call \p callbackfunction for each match
  * \param  handle                handle created with multifinder_create
  * \param  data                  text to search (does not need to be NULL terminated), will be freed by multifinder_free

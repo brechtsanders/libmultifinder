@@ -6,6 +6,12 @@
 
 #define READBUFFERSIZE 128
 
+int whenfound (multifinder handle, size_t length, void* patterncallbackdata, void* callbackdata)
+{
+  (*(size_t*)patterncallbackdata)++;
+  return 0;
+}
+
 void show_help()
 {
   printf(
@@ -30,10 +36,16 @@ int main (int argc, char** argv)
   const char* srcfile = NULL;
   const char* srctext = NULL;
   size_t count = 0;
+  size_t* patterncounts = NULL;
+  size_t patterns = 0;
   //initialize
-  if ((finder = multifinder_create(NULL, NULL, NULL)) == NULL) {
+  if ((finder = multifinder_create(whenfound, NULL, NULL)) == NULL) {
     fprintf(stderr, "Error in multifinder_create()\n");
-    return 1;
+    return 2;
+  }
+  if ((patterncounts = (size_t*)malloc((argc - 1) * sizeof(size_t))) == NULL) {
+    fprintf(stderr, "Memory allocation error\n");
+    return 3;
   }
   //process command line parameters
   {
@@ -90,15 +102,18 @@ int main (int argc, char** argv)
               param = argv[++i];
             if (!param)
               paramerror++;
-            else
-              multifinder_add_pattern(finder, param, flags, NULL);
+            else {
+              patterncounts[patterns] = 0;
+              multifinder_add_pattern(finder, param, flags, &patterncounts[patterns++]);
+            }
             break;
           default :
             paramerror++;
             break;
         }
       } else {
-        multifinder_add_pattern(finder, argv[i], flags, NULL);
+        patterncounts[patterns] = 0;
+        multifinder_add_pattern(finder, argv[i], flags, &patterncounts[patterns++]);
       }
     }
     if (paramerror || argc <= 1) {
@@ -124,7 +139,7 @@ int main (int argc, char** argv)
       if ((src = fopen(srcfile, "rb")) == NULL) {
         fprintf(stderr, "Error opening file: %s\n", srcfile);
         multifinder_free(finder);
-        return 2;
+        return 4;
       }
     }
     while ((buflen = fread(buf, 1, READBUFFERSIZE, src)) > 0) {
@@ -135,7 +150,13 @@ int main (int argc, char** argv)
   }
   //show results
   printf("%lu matches found\n", (unsigned long)count);
+  {
+    size_t i;
+    for (i = 0; i < patterns; i++)
+      printf("pattern %lu found %lu times\n", (unsigned long)i + 1, (unsigned long)patterncounts[i]);
+  }
   //clean up
+  free(patterncounts);
   multifinder_free(finder);
   return 0;
 }
