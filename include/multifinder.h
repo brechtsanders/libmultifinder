@@ -58,7 +58,7 @@ SOFTWARE.
 /*! \brief minor version number */
 #define MULTIFINDER_VERSION_MINOR 1
 /*! \brief micro version number */
-#define MULTIFINDER_VERSION_MICRO 0
+#define MULTIFINDER_VERSION_MICRO 1
 /*! @} */
 
 /*! \cond PRIVATE */
