@@ -61,7 +61,7 @@
 				<Option object_output="obj/Debug64/" />
 				<Option type="1" />
 				<Option compiler="MINGW64" />
-				<Option parameters="-i -f test_data.txt et omnis -p voluptat voluptat" />
+				<Option parameters="-i -f test_data.txt et omnis -p voluptat" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
