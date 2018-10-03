@@ -141,6 +141,11 @@ DLL_EXPORT_MULTIFINDER void multifinder_add_allocated_pattern (multifinder handl
   //add after last entry
   last = &(handle->patterns);
   while (*last) {
+    //abort if the same pattern was already added
+    if ((*last)->datalen == patternlen && (*last)->strncmp_fn == entry->strncmp_fn && strncmp((*last)->data, pattern, patternlen) == 0) {
+      free(entry);
+      return;
+    }
     last = &((*last)->next);
   }
   *last = entry;
