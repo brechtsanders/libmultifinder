@@ -1,3 +1,12 @@
+0.2.0
+
+2018-10-07  Brecht Sanders  https://github.com/brechtsanders/
+
+  * improved comparison by not longer splitting search across 2 buffers
+  * ABI change: removed multifinder_position()
+  * ABI change: removed handle parameter from multifinder_found_callback_fn()
+  * ABI change: added data parameter to multifinder_found_callback_fn()
+
 0.1.2
 
 2018-10-03  Brecht Sanders  https://github.com/brechtsanders/

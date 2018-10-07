@@ -56,9 +56,9 @@ SOFTWARE.
 /*! \brief major version number */
 #define MULTIFINDER_VERSION_MAJOR 0
 /*! \brief minor version number */
-#define MULTIFINDER_VERSION_MINOR 1
+#define MULTIFINDER_VERSION_MINOR 2
 /*! \brief micro version number */
-#define MULTIFINDER_VERSION_MICRO 2
+#define MULTIFINDER_VERSION_MICRO 0
 /*! @} */
 
 /*! \cond PRIVATE */
@@ -103,8 +103,8 @@ DLL_EXPORT_MULTIFINDER const char* multifinder_get_version_string ();
 typedef struct multifinder_struct* multifinder;
 
 /*! \brief callback function called when a pattern is found
- * \param  handle                handle created with multifinder_create
- * \param  length                length of match
+ * \param  data                  matching data
+ * \param  datalen               length of matching data
  * \param  patterncallbackdata   user data for matched pattern
  * \param  callbackdata          user data
  * \return 0 to continue processing or non-zero to abort
@@ -113,7 +113,7 @@ typedef struct multifinder_struct* multifinder;
  * \sa     multifinder_add_pattern
  * \sa     multifinder_add_allocated_pattern
  */
-typedef int (*multifinder_found_callback_fn)(multifinder handle, size_t length, void* patterncallbackdata, void* callbackdata);
+typedef int (*multifinder_found_callback_fn)(const char* data, size_t datalen, void* patterncallbackdata, void* callbackdata);
 
 /*! \brief callback function called for data that is not a match
  * \param  data                  data to be flushed (NULL at end of input stream)

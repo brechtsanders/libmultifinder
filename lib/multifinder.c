@@ -167,29 +167,6 @@ DLL_EXPORT_MULTIFINDER size_t multifinder_count_patterns (multifinder handle)
   return count;
 }
 
-int compare_across_2_buffers (int (*strncmp_fn)(const char*, const char*, size_t), const char* s1, size_t s1len, const char* s2a, size_t s2alen, const char* s2b, size_t s2blen)
-{
-  int result;
-/*
-  //check if the 2 buffers are long enough to compare with
-  if (s1len > s2alen + s2blen)
-    return 1;
-*/
-  //if first buffer is larger than s1 only compare for the length of s1
-  if (s2alen > s1len) {
-    s2alen = s1len;
-    s2blen = 0;
-  }
-  //compare with first buffer
-  if ((result = (s2alen > 0 ? (*strncmp_fn)(s1, s2a, s2alen) : 0)) == 0) {
-    if (s2alen + s2blen > s1len)
-      s2blen = s1len - s2alen;
-    //compare with second buffer
-    result = (s2blen > 0 ? (*strncmp_fn)(s1 + s2alen, s2b, s2blen) : 0);
-  }
-  return result;
-}
-
 size_t flush_data (multifinder handle, size_t flushpos, const char* data)
 {
   if (flushpos > handle->flushedpos) {
@@ -224,83 +201,46 @@ DLL_EXPORT_MULTIFINDER size_t multifinder_process (multifinder handle, const cha
   size_t count = 0;
   if (handle->abortstatus == 0) {
     struct multifinder_pattern_list* pattern;
-#if 0
-    size_t i = 0;
-    size_t j = 0;
-    //scan buffered data in combination with supplied data
-    while (handle->buflen - i + datalen - j >= handle->longestpattern) {
-      pattern = handle->patterns;
-      while (pattern) {
-        if (compare_across_2_buffers(pattern->strncmp_fn, pattern->data, pattern->datalen, handle->buf + i, handle->buflen - i, data + j, datalen - j) == 0) {
-          //match found
-          count++;
-          //flush data
-          flush_data(handle, handle->streampos - handle->buflen + i + j, data);
-          //call callback
-          if (handle->foundfunction && (handle->abortstatus = (*handle->foundfunction)(handle, pattern->datalen, pattern->callbackdata, handle->callbackdata)) != 0) {
-            //abort when requested by callback function
-            handle->streampos += datalen;
-            return count;
-          }
-          handle->flushedpos += pattern->datalen;
-          if ((i += pattern->datalen - 1) > handle->buflen) {
-            //all of buffer processed
+    size_t i;
+    //scan buffer padded with length of longest pattern - 1 bytes of new data
+    if (handle->buf && handle->buflen > 0) {
+      //pad buffer with length of longest pattern - 1 bytes of new data
+      memcpy(handle->buf + handle->buflen, data, handle->longestpattern - 1);
+      //scan each position in the extended buffer
+      for (i = 0; i < handle->buflen; i++) {
+        //check for match with each pattern
+        pattern = handle->patterns;
+        while (pattern) {
+          if ((*(pattern->strncmp_fn))(handle->buf + i, pattern->data, pattern->datalen) == 0) {
+            //match found
+            count++;
             //flush data
-            //flush_data(handle, handle->streampos, data);
-            //point to supplied data
-            j += (i - handle->buflen);
-            i = handle->buflen;
+            flush_data(handle, handle->streampos - handle->buflen + i, data);
+            //call callback
+            if (handle->foundfunction && (handle->abortstatus = (*handle->foundfunction)(handle->buf + i, pattern->datalen, pattern->callbackdata, handle->callbackdata)) != 0) {
+              //abort when requested by callback function
+              handle->streampos += datalen;
+              return count;
+            }
+            handle->flushedpos += pattern->datalen;
+            i += pattern->datalen - 1;
+            break;
           }
-          break;
+          pattern = pattern->next;
         }
-        pattern = pattern->next;
       }
-      if (i < handle->buflen)
-        i++;
-      else if (++j >= datalen)
-        break;
     }
-#else
-    size_t i = 0;
-    //scan buffered data in combination with supplied data
-    //while (i < handle->buflen && handle->buflen - i + datalen >= handle->longestpattern) {
-    while (i < handle->buflen && i - handle->buflen + handle->longestpattern <= datalen) {
-      pattern = handle->patterns;
-      while (pattern) {
-        if (compare_across_2_buffers(pattern->strncmp_fn, pattern->data, pattern->datalen, handle->buf + i, handle->buflen - i, data, datalen) == 0) {
-          //match found
-          count++;
-          //flush data
-          flush_data(handle, handle->streampos - handle->buflen + i, data);
-          //call callback
-          if (handle->foundfunction && (handle->abortstatus = (*handle->foundfunction)(handle, pattern->datalen, pattern->callbackdata, handle->callbackdata)) != 0) {
-            //abort when requested by callback function
-            handle->streampos += datalen;
-            return count;
-          }
-          handle->flushedpos += pattern->datalen;
-          i += pattern->datalen - 1;
-          break;
-        }
-        pattern = pattern->next;
-      }
-      i++;
-    }
-    //flush data
-    //flush_data(handle, handle->streampos, data);
     //scan rest of supplied data
-    i -= handle->buflen;
-    //while (datalen - i >= handle->longestpattern) {
-    while (i + handle->longestpattern <= datalen) {
+    for (i = 0; i + handle->longestpattern <= datalen; i++) {
       pattern = handle->patterns;
       while (pattern) {
-        if ((*(pattern->strncmp_fn))(pattern->data, data + i, pattern->datalen) == 0) {
+        if ((*(pattern->strncmp_fn))(data + i, pattern->data, pattern->datalen) == 0) {
           //match found
           count++;
           //flush data
           flush_data(handle, handle->streampos + i, data);
           //call callback
-          if (handle->foundfunction && (handle->abortstatus = (*handle->foundfunction)(handle, pattern->datalen, pattern->callbackdata, handle->callbackdata)) != 0) {
+          if (handle->foundfunction && (handle->abortstatus = (*handle->foundfunction)(data + i, pattern->datalen, pattern->callbackdata, handle->callbackdata)) != 0) {
             //abort when requested by callback function
             handle->streampos += datalen;
             return count;
@@ -311,13 +251,11 @@ DLL_EXPORT_MULTIFINDER size_t multifinder_process (multifinder handle, const cha
         }
         pattern = pattern->next;
       }
-      i++;
     }
-#endif
     //if buffer is not allocated yet allocate it with the size of the longest pattern
     size_t bufsize = handle->longestpattern - 1;
     if (!handle->buf)
-      handle->buf = (char*)malloc(bufsize);
+      handle->buf = (char*)malloc(bufsize * 2);
     //keep data in buffer for the next time
     if (handle->buflen + datalen <= bufsize) {
       //existing + supplied data is shorter than longest pattern => append all supplied data to buffer
@@ -363,7 +301,7 @@ DLL_EXPORT_MULTIFINDER size_t multifinder_finalize (multifinder handle)
           //flush data
           flush_data(handle, handle->streampos - handle->buflen + i, NULL);
           //call callback
-          if (handle->foundfunction && (*handle->foundfunction)(handle, pattern->datalen, pattern->callbackdata, handle->callbackdata) != 0) {
+          if (handle->foundfunction && (*handle->foundfunction)(handle->buf + i, pattern->datalen, pattern->callbackdata, handle->callbackdata) != 0) {
             return count;
           }
           handle->flushedpos += pattern->datalen;

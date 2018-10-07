@@ -6,7 +6,7 @@
 
 #define READBUFFERSIZE 128
 
-int whenfound (multifinder handle, size_t length, void* patterncallbackdata, void* callbackdata)
+int whenfound (const char* data, size_t datalen, void* patterncallbackdata, void* callbackdata)
 {
   (*(size_t*)patterncallbackdata)++;
   return 0;
